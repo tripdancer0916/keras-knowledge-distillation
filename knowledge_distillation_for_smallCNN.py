@@ -17,6 +17,7 @@ from keras.layers import Dense, Dropout, Activation, Flatten, advanced_activatio
 from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling, Lambda, concatenate
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.models import load_model as keras_load_model
+from keras.callbacks import Callback
 import os
 
 batch_size = 100
@@ -92,45 +93,78 @@ def soft_logloss(y_true, y_pred):
     return logloss(y_soft, y_pred_soft)
 
 
-input_layer = Input(x_train.shape[1:])
-x = Convolution2D(32, (3, 3), padding='same')(input_layer)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = MaxPooling2D((2, 2), strides=(2, 2))(x)
-x = Dropout(0.5)(x)
-x = Convolution2D(32, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(32, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = MaxPooling2D((2, 2), strides=(2, 2))(x)
-x = Dropout(0.5)(x)
-x = Convolution2D(32, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+class TrainingCallback(Callback):
+    def __init__(self, model):
+        super(TrainingCallback, self).__init__()
+        self.model = model
 
-x = pooling.GlobalAveragePooling2D()(x)
-logits = Dense(10, activation=None)(x)
-probabilities = Activation('softmax')(logits)
+    def on_epoch_end(self, epoch, logs=None):
+        acc = model.evaluate()
+        print(acc)
 
-logits_T = Lambda(lambda x: x/temperature)(logits)
-probabilities_T = Activation('softmax')(logits_T)
 
-output = concatenate([probabilities, probabilities_T])
-model = Model(input_layer, output)
-model.summary()
+class StudentModel(object):
+    def __init__(self):
+        self.train_model = None
+        self.temperature = 5.0
+        self.train_model = self.prepare()
+
+    def prepare(self):
+        input_layer = Input(x_train.shape[1:])
+        x = Convolution2D(32, (3, 3), padding='same')(input_layer)
+        x = BatchNormalization()(x)
+        x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+        x = MaxPooling2D((2, 2), strides=(2, 2))(x)
+        x = Dropout(0.5)(x)
+        x = Convolution2D(32, (3, 3), padding='same')(x)
+        x = BatchNormalization()(x)
+        x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+        x = Convolution2D(32, (3, 3), padding='same')(x)
+        x = BatchNormalization()(x)
+        x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+        x = MaxPooling2D((2, 2), strides=(2, 2))(x)
+        x = Dropout(0.5)(x)
+        x = Convolution2D(32, (3, 3), padding='same')(x)
+        x = BatchNormalization()(x)
+        x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+
+        x = pooling.GlobalAveragePooling2D()(x)
+        logits = Dense(10, activation=None)(x)
+        probabilities = Activation('softmax')(logits)
+
+        logits_T = Lambda(lambda x: x/temperature)(logits)
+        probabilities_T = Activation('softmax')(logits_T)
+
+        output = concatenate([probabilities, probabilities_T])
+
+        model = Model(input_layer, output)
+        return model
+
+    def evaluate(self):
+        y_pred = model.predict(x_test)
+        acc = 0
+        for i in range(y_pred.shape[0]):
+            if np.argmax(y_pred[i][:10]) == np.argmax(y_test):
+                acc = acc + 1
+
+        return acc / y_pred.shape[0]
+
+
+model = StudentModel()
+model.train_model.summary()
 
 lambda_const = 0
 
-model.compile(
+model.train_model.compile(
     optimizer=keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
     loss=lambda y_true, y_pred: knowledge_distillation_loss(y_true, y_pred, lambda_const),
     metrics=[accuracy, categorical_crossentropy, soft_logloss]
 )
 
+training_callback = TrainingCallback(model)
 
-model.fit(
+
+model.train_model.fit(
     x_train, y_train_,
     batch_size=batch_size,
     epochs=epochs,
@@ -138,7 +172,7 @@ model.fit(
     verbose=1, shuffle=True,
     callbacks=[
         ModelCheckpoint(filepath="./models/distilled_model.ep{epoch:02d}.h5"),
-        ReduceLROnPlateau(monitor='val_accuracy', factor=0.1, patience=2, epsilon=0.007)
+        training_callback
     ],
 )
 
