@@ -100,7 +100,7 @@ class TrainingCallback(Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         acc = model.evaluate()
-        print(acc)
+        print('val_acc: ', acc)
 
 
 class StudentModel(object):
@@ -144,7 +144,7 @@ class StudentModel(object):
         y_pred = self.train_model.predict(x_test)
         acc = 0
         for i in range(y_pred.shape[0]):
-            if np.argmax(y_pred[i][:10]) == np.argmax(y_test):
+            if np.argmax(y_pred[i][:10]) == np.argmax(y_test[i]):
                 acc = acc + 1
 
         return acc / y_pred.shape[0]
