@@ -141,7 +141,7 @@ class StudentModel(object):
         return model
 
     def evaluate(self):
-        y_pred = model.predict(x_test)
+        y_pred = self.train_model.predict(x_test)
         acc = 0
         for i in range(y_pred.shape[0]):
             if np.argmax(y_pred[i][:10]) == np.argmax(y_test):
