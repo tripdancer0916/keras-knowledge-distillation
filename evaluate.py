@@ -216,8 +216,9 @@ model = cifar10vgg(train=False)
 
 model.model.summary()
 # Score trained model.
-predicted_x = model.predict(x_test)
-residuals = np.argmax(predicted_x, 1) != np.argmax(y_test, 1)
-
-loss = sum(residuals) / len(residuals)
-print("the validation 0/1 loss is: ", loss)
+sgd = optimizers.SGD(lr=0.003, decay=1e-6, momentum=0.9, nesterov=True)
+model.model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+x_test = model.normalize_production(x_test)
+scores = model.model.evaluate(x_test, y_test, verbose=1)
+print('Test loss:', scores[0])
+print('Test accuracy:', scores[1])
