@@ -20,6 +20,7 @@ import numpy as np
 import os
 
 num_classes = 10
+temperature = 1
 # The data, split between train and test sets:
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 print('x_train shape:', x_train.shape)
