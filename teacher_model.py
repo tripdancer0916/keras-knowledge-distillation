@@ -137,7 +137,8 @@ x_train /= 255
 x_test /= 255
 
 print('Not using data augmentation.')
-callbacks = [ModelCheckpoint(filepath="teachermodel.ep{epoch:02d}.h5")]
+callbacks = []
+callbacks.append(ModelCheckpoint(filepath="teachermodel.ep{epoch:02d}.h5"))
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
