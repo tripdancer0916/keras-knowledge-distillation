@@ -52,7 +52,7 @@ def xception(input_layer):
     x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
     x = add([x, residual])
 
-    residual = Conv2D(256, (1, 1), strides=(2, 2),
+    residual = Conv2D(256, (1, 1), strides=(1, 1),
                       padding='same', use_bias=False)(x)
     residual = BatchNormalization()(residual)
 
@@ -94,7 +94,7 @@ def xception(input_layer):
 
         x = add([x, residual])
 
-    residual = Conv2D(1024, (1, 1), strides=(2, 2),
+    residual = Conv2D(1024, (1, 1), strides=(1, 1),
                       padding='same', use_bias=False)(x)
     residual = BatchNormalization()(residual)
 
