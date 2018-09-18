@@ -34,7 +34,7 @@ x_test = x_test.astype('float32')
 x_train /= 255
 x_test /= 255
 
-model = keras_load_model('')
+model = keras_load_model('/home/ubuntu/knowledge-distillation/models/model.ep33.h5')
 
 model.summary()
 # Score trained model.
