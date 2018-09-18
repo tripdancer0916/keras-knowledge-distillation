@@ -16,6 +16,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, advanced_activations, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling, Lambda, concatenate
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
+from keras.models import load_model as keras_load_model
 import os
 
 batch_size = 100
@@ -37,12 +38,18 @@ x_test = x_test.astype('float32')
 x_train /= 255
 x_test /= 255
 
-data_dir = './data/'
+teacher_model = keras_load_model('teacher-model.ep55.h5')
 
-train_logits = np.load(data_dir + 'train_logits.npy')[()]
-val_logits = np.load(data_dir + 'val_logits.npy')[()]
+teacher_model.layers.pop()
+model = Model(teacher_model.input, teacher_model.layers[-1].output)
 
-y_train_ =
+logits_train = model.predict(x_train)
+y_train_ = np.concatenate([y_train, logits_train], axis=1)
+
+logits_test = model.predict(x_test)
+y_test_ = np.concatenate([y_test, logits_test], axis=1)
+
+print('finish preparing.')
 
 temperature = 5.0
 
