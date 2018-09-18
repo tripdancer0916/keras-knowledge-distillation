@@ -32,18 +32,10 @@ y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
 input_layer = Input(x_train.shape[1:])
-x = Convolution2D(64, (3, 3), padding='same')(input_layer)
+x = Convolution2D(32, (3, 3), padding='same')(input_layer)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(64, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = MaxPooling2D((2, 2), strides=(2, 2))(x)
-x = Dropout(0.5)(x)
-x = Convolution2D(64, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(64, (3, 3), padding='same')(x)
+x = Convolution2D(32, (3, 3), padding='same')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 x = MaxPooling2D((2, 2), strides=(2, 2))(x)
@@ -54,6 +46,12 @@ x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 x = Convolution2D(64, (3, 3), padding='same')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+x = MaxPooling2D((2, 2), strides=(2, 2))(x)
+x = Dropout(0.5)(x)
+x = Convolution2D(64, (3, 3), padding='same')(x)
+x = BatchNormalization()(x)
+x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+
 x = pooling.GlobalAveragePooling2D()(x)
 logits = Dense(10, activation=None)(x)
 output = Activation('softmax')(logits)
@@ -73,7 +71,7 @@ x_test /= 255
 
 print('Not using data augmentation.')
 
-callbacks = [ModelCheckpoint(filepath="model.ep{epoch:02d}.h5")]
+callbacks = [ModelCheckpoint(filepath="./models/model.ep{epoch:02d}.h5")]
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
