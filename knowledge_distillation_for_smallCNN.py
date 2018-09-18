@@ -162,7 +162,7 @@ class StudentModel(object):
 model = StudentModel()
 model.train_model.summary()
 
-lambda_const = 0.9
+lambda_const = 0
 
 model.train_model.compile(
     optimizer=keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
@@ -170,7 +170,7 @@ model.train_model.compile(
     metrics=[accuracy, categorical_crossentropy, soft_logloss]
 )
 
-training_callback = TrainingCallback(model, 'distilled')
+training_callback = TrainingCallback(model, 'not-distilled')
 
 
 model.train_model.fit(
