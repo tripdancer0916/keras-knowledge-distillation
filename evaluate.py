@@ -33,6 +33,7 @@ x_train /= 255
 x_test /= 255
 
 model = keras_load_model('cifar10vgg.h5')
+model.summary()
 
 # Score trained model.
 scores = model.evaluate(x_test, y_test, verbose=1)
