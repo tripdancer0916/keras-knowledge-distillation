@@ -153,13 +153,6 @@ class StudentModel(object):
         x = MaxPooling2D((2, 2), strides=(2, 2))(x)
         x = Dropout(0.3)(x)
 
-        x = Convolution2D(512, (3, 3), padding='same')(x)
-        x = BatchNormalization()(x)
-        x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-        x = Convolution2D(512, (3, 3), padding='same')(x)
-        x = BatchNormalization()(x)
-        x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-
         x = Flatten()(x)
         x = Dense(512, activation=None)(x)
         x = BatchNormalization()(x)
