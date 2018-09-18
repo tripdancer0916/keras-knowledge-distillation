@@ -216,6 +216,8 @@ model = cifar10vgg(train=False)
 
 model.model.summary()
 # Score trained model.
+sgd = optimizers.SGD(lr=0.003, decay=lr_decay, momentum=0.9, nesterov=True)
+model.model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 scores = model.model.evaluate(x_test, y_test, verbose=1)
 print('Test loss:', scores[0])
 print('Test accuracy:', scores[1])
