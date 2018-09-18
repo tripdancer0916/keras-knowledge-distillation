@@ -78,7 +78,7 @@ model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
           validation_data=(x_test, y_test),
-          shuffle=True, verbose=2, callbacks=callbacks)
+          shuffle=True, verbose=1, callbacks=callbacks)
 
 # Save model and weights
 if not os.path.isdir(save_dir):

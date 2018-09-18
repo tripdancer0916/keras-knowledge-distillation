@@ -12,6 +12,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, advanced_activations, BatchNormalization, SeparableConv2D
 from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling, add
 from keras.callbacks import ModelCheckpoint
+from keras.utils import multi_gpu_model
 import os
 
 batch_size = 50
@@ -127,7 +128,8 @@ opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 
 input_layer = Input(x_train.shape[1:])
 output = xception(input_layer)
-model = Model(input_layer, output)
+org_model = Model(input_layer, output)
+model = multi_gpu_model(org_model, 2)
 model.summary()
 model.compile(loss='categorical_crossentropy',
               optimizer=opt,
@@ -145,7 +147,7 @@ model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
           validation_data=(x_test, y_test),
-          shuffle=True, verbose=2, callbacks=callbacks)
+          shuffle=True, verbose=1, callbacks=callbacks)
 
 # Save model and weights
 if not os.path.isdir(save_dir):
