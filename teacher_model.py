@@ -15,7 +15,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.utils import multi_gpu_model
 import os
 
-batch_size = 50
+batch_size = 100
 num_classes = 10
 epochs = 300
 num_predictions = 20
