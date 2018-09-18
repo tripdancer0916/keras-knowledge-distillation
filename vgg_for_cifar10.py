@@ -78,7 +78,7 @@ x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 x = MaxPooling2D((2, 2), strides=(2, 2))(x)
 x = Dropout(0.3)(x)
 
-x = Flatten()(x)
+x = pooling.GlobalAveragePooling2D()(x)
 x = Dense(512, kernel_regularizer=regularizers.l2(weight_decay))(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
