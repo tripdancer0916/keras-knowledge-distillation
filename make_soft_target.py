@@ -26,6 +26,19 @@ num_classes = 10
 epochs = 300
 num_predictions = 20
 
+
+def softmax(a):
+    # 一番大きい値を取得
+    c = np.max(a)
+    # 各要素から一番大きな値を引く（オーバーフロー対策）
+    exp_a = np.exp(a - c)
+    sum_exp_a = np.sum(exp_a)
+    # 要素の値/全体の要素の合計
+    y = exp_a / sum_exp_a
+
+    return y
+
+
 # The data, split between train and test sets:
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
 print('x_train shape:', x_train.shape)
@@ -33,9 +46,20 @@ print('y_train shape:', y_train.shape)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
 
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train /= 255
+x_test /= 255
+
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
-z = model.predict(x_test)
+z = model.predict(x_train[:100])
+print(z[0])
 
-print(z.shape)
+model.layers.pop()
+model = Model(model.input, model.layers[-1].output)
+
+logits = model.predict(x_train[:100])
+print(logits[0])
+print(softmax(logits[0]))
