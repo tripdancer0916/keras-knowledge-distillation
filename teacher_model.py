@@ -14,7 +14,7 @@ from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling, add
 from keras.callbacks import ModelCheckpoint
 import os
 
-batch_size = 100
+batch_size = 50
 num_classes = 10
 epochs = 300
 num_predictions = 20
