@@ -38,10 +38,11 @@ x_test /= 255
 model = keras_load_model('/home/ubuntu/knowledge-distillation/models/model.ep33.h5')
 
 model.summary()
-# Score trained model.
-sgd = optimizers.SGD(lr=0.003, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
-scores = model.evaluate(x_test, y_test, verbose=1)
-print('Test loss:', scores[0])
-print('Test accuracy:', scores[1])
+y_pred = model.predict(x_test)
+acc = 0
+for i in range(y_pred.shape[0]):
+    if np.argmax(y_pred[i][:10]) == np.argmax(y_test):
+        acc = acc + 1
+
+print('Test accuracy:', acc / y_pred.shape[0])
