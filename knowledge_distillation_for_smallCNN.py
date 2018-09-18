@@ -118,6 +118,7 @@ probabilities_T = Activation('softmax')(logits_T)
 
 output = concatenate([probabilities, probabilities_T])
 model = Model(input_layer, output)
+model.summary()
 
 lambda_const = 0.07
 
