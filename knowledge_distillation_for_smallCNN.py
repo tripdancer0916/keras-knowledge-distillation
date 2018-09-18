@@ -121,14 +121,13 @@ output = concatenate([probabilities, probabilities_T])
 model = Model(input_layer, output)
 model.summary()
 
-lambda_const = 0.9
+lambda_const = 0
 
 model.compile(
     optimizer=optimizers.SGD(lr=1e-1, momentum=0.9, nesterov=True),
     loss=lambda y_true, y_pred: knowledge_distillation_loss(y_true, y_pred, lambda_const),
     metrics=[accuracy, categorical_crossentropy, soft_logloss]
 )
-
 
 
 model.fit(
