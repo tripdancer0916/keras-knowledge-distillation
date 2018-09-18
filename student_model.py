@@ -11,11 +11,8 @@ from keras.engine.training import Model
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten, advanced_activations, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling
+from keras.callbacks import ModelCheckpoint
 import os
-
-import numpy as np
-
-from functools import reduce
 
 batch_size = 100
 num_classes = 10
@@ -75,11 +72,13 @@ x_train /= 255
 x_test /= 255
 
 print('Not using data augmentation.')
+
+callbacks = [ModelCheckpoint(filepath="model.ep{epoch:02d}.h5")]
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,
           validation_data=(x_test, y_test),
-          shuffle=True, verbose=2)
+          shuffle=True, verbose=2, callbacks=callbacks)
 
 # Save model and weights
 if not os.path.isdir(save_dir):
