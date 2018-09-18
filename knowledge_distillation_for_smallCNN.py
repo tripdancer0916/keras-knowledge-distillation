@@ -51,7 +51,7 @@ y_test_ = np.concatenate([y_test, logits_test], axis=1)
 
 print('finish preparing.')
 
-temperature = 5.0
+temperature = 20
 
 
 def knowledge_distillation_loss(y_true, y_pred, lambda_const):
@@ -68,7 +68,8 @@ def knowledge_distillation_loss(y_true, y_pred, lambda_const):
     #    probabilities made softer with temperature
     y_pred, y_pred_soft = y_pred[:, :num_classes], y_pred[:, num_classes:]
 
-    return lambda_const * logloss(y_true, y_pred) + logloss(y_soft, y_pred_soft)
+    return (1-lambda_const) * logloss(y_true, y_pred) + \
+           lambda_const * temperature * temperature * logloss(y_soft, y_pred_soft)
 
 
 def accuracy(y_true, y_pred):
@@ -120,7 +121,7 @@ output = concatenate([probabilities, probabilities_T])
 model = Model(input_layer, output)
 model.summary()
 
-lambda_const = 0.07
+lambda_const = 0.9
 
 model.compile(
     optimizer=optimizers.SGD(lr=1e-1, momentum=0.9, nesterov=True),
