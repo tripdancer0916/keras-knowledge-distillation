@@ -18,6 +18,8 @@ from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling, Lambda, c
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.models import load_model as keras_load_model
 from keras.callbacks import Callback
+import pytz
+from datetime import datetime
 import os
 
 batch_size = 100
@@ -94,13 +96,20 @@ def soft_logloss(y_true, y_pred):
 
 
 class TrainingCallback(Callback):
-    def __init__(self, model):
+    def __init__(self, model, model_prefix):
         super(TrainingCallback, self).__init__()
         self.model = model
+        self.model_prefix = model_prefix
 
     def on_epoch_end(self, epoch, logs={}):
         acc = model.evaluate()
         print('val_acc: ', acc)
+        time_stamp = datetime.strftime(datetime.now(pytz.timezone('Japan')), '%m%d%H%M')
+        model_name = '{}_{}_epoch_{:03d}_ACC_{:.4f}_loss_{:.4f}.aiinside'.format(
+            time_stamp, self.model_prefix, epoch + 1, acc, logs['loss'])
+        save_model_path = os.path.join('./', model_name)
+
+        self.model.train_model.save(save_model_path)
 
 
 class StudentModel(object):
@@ -161,7 +170,7 @@ model.train_model.compile(
     metrics=[accuracy, categorical_crossentropy, soft_logloss]
 )
 
-training_callback = TrainingCallback(model)
+training_callback = TrainingCallback(model, 'distilled')
 
 
 model.train_model.fit(
