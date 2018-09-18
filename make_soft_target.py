@@ -37,3 +37,5 @@ y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 z = model.predict(x_test)
+
+print(z.shape)
