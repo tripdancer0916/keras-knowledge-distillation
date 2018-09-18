@@ -120,12 +120,14 @@ def xception(input_layer):
     logits = Dense(10, activation=None)(x)
     output = Activation('softmax')(logits)
 
-    return Model(input_layer, output)
+    return output
 
 
 opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 
-model = xception(Input(x_train.shape[1:]))
+input_layer = Input(x_train.shape[1:])
+output = xception(input_layer)
+model = Model(input_layer, output)
 model.summary()
 model.compile(loss='categorical_crossentropy',
               optimizer=opt,
