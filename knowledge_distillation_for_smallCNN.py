@@ -41,7 +41,7 @@ x_test = x_test.astype('float32')
 x_train /= 255
 x_test /= 255
 
-teacher_model = keras_load_model('teacher-model.ep55.h5')
+teacher_model = keras_load_model('teacher-model.ep140.h5')
 
 teacher_model.layers.pop()
 model = Model(teacher_model.input, teacher_model.layers[-1].output)
