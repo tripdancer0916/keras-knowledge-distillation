@@ -98,7 +98,7 @@ class TrainingCallback(Callback):
         super(TrainingCallback, self).__init__()
         self.model = model
 
-    def on_epoch_end(self, epoch, logs=None):
+    def on_epoch_end(self, epoch, logs={}):
         acc = model.evaluate()
         print(acc)
 
@@ -171,7 +171,6 @@ model.train_model.fit(
     validation_data=(x_test, y_test_),
     verbose=1, shuffle=True,
     callbacks=[
-        ModelCheckpoint(filepath="./models/distilled_model.ep{epoch:02d}.h5"),
         training_callback
     ],
 )
