@@ -109,7 +109,7 @@ class TrainingCallback(Callback):
             time_stamp, self.model_prefix, epoch + 1, acc, logs['loss'])
         save_model_path = os.path.join('./models', model_name)
 
-        self.model.train_model.save(save_model_path)
+        model.train_model.save(save_model_path)
 
 
 class StudentModel(object):
