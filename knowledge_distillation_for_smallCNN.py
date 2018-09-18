@@ -107,7 +107,7 @@ class TrainingCallback(Callback):
         time_stamp = datetime.strftime(datetime.now(pytz.timezone('Japan')), '%m%d%H%M')
         model_name = '{}_{}_epoch_{:03d}_ACC_{:.4f}_loss_{:.4f}.aiinside'.format(
             time_stamp, self.model_prefix, epoch + 1, acc, logs['loss'])
-        save_model_path = os.path.join('./', model_name)
+        save_model_path = os.path.join('./models', model_name)
 
         self.model.train_model.save(save_model_path)
 
