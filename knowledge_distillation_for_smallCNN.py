@@ -124,7 +124,7 @@ model.summary()
 lambda_const = 0
 
 model.compile(
-    optimizer=optimizers.SGD(lr=1e-1, momentum=0.9, nesterov=True),
+    optimizer=keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
     loss=lambda y_true, y_pred: knowledge_distillation_loss(y_true, y_pred, lambda_const),
     metrics=[accuracy, categorical_crossentropy, soft_logloss]
 )
@@ -137,7 +137,7 @@ model.fit(
     validation_data=(x_test, y_test_),
     verbose=1, shuffle=True,
     callbacks=[
-        ModelCheckpoint(filepath="./models/model.ep{epoch:02d}.h5"),
+        ModelCheckpoint(filepath="./models/distilled_model.ep{epoch:02d}.h5"),
         ReduceLROnPlateau(monitor='val_accuracy', factor=0.1, patience=2, epsilon=0.007)
     ],
 )
