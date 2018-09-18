@@ -34,7 +34,7 @@ y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
 
-def distillation_loss(input):
+def distillation_loss(y_true, ):
     y_pred, y_true, teacher_probabilities_T, probabilities_T = input
     return lambda_const * K.categorical_crossentropy(y_true, y_pred) + \
            K.categorical_crossentropy(teacher_probabilities_T, probabilities_T)
@@ -67,19 +67,32 @@ x = pooling.GlobalAveragePooling2D()(x)
 logits = Dense(10, activation=None)(x)
 output_softmax = Activation('softmax')(logits)
 
-y_true = Input(name='y_true', shape=[None], dtype='float32')
+core_model = Model(input_layer, output_softmax)
+
+teacher_model.layers.pop()
+teacher_logits = teacher_model(input_layer)
+teacher_model.trainable = False
+teacher_model.compile(optimizer='adam', loss='categorical_crossentropy')
+teacher_logits_T = Lambda(lambda x: x / temperature)(teacher_logits)
+teacher_probabilities_T = Activation('softmax')(teacher_logits_T)
+
+logits_T = Lambda(lambda x: x / temperature)(logits)
+probabilities_T = Activation('softmax')(logits_T)
+
+y_true = Input(name='y_true', shape=y_train.shape[1:], dtype='float32')
 
 output = Lambda(distillation_loss, output_shape=(1,))(
     [output_softmax, y_true, teacher_probabilities_T, probabilities_T]
 )
+inputs = [input_layer, y_true]
 
 opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 
-model = Model(input_layer, output)
-model.summary()
-model.compile(loss={'distillation_loss': lambda y_true, y_pred: y_pred},
-              optimizer=opt,
-              metrics=['accuracy'])
+train_model = Model([inputs], [output])
+core_model.summary()
+train_model.compile(loss={'distillation_loss': lambda y_true, y_pred: y_pred},
+                    optimizer=opt,
+                    metrics=['accuracy'])
 
 x_train = x_train.astype('float32')
 x_test = x_test.astype('float32')
@@ -89,17 +102,17 @@ x_test /= 255
 print('Not using data augmentation.')
 
 callbacks = [ModelCheckpoint(filepath="./models/model.ep{epoch:02d}.h5")]
-model.fit(x_train, y_train,
-          batch_size=batch_size,
-          epochs=epochs,
-          validation_data=(x_test, y_test),
-          shuffle=True, verbose=2, callbacks=callbacks)
+train_model.fit([x_train, y_train], y_train,
+                batch_size=batch_size,
+                epochs=epochs,
+                validation_data=(x_test, y_test),
+                shuffle=True, verbose=2, callbacks=callbacks)
 
 # Save model and weights
 if not os.path.isdir(save_dir):
     os.makedirs(save_dir)
 model_path = os.path.join(save_dir, model_name)
-model.save(model_path)
+train_model.save(model_path)
 print('Saved trained model at %s ' % model_path)
 
 # Score trained model.
