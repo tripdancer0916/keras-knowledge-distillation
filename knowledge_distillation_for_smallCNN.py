@@ -54,7 +54,7 @@ y_test_ = np.concatenate([y_test, logits_test], axis=1)
 
 print('finish preparing.')
 
-temperature = 20
+temperature = 10
 
 
 def knowledge_distillation_loss(y_true, y_pred, lambda_const):
