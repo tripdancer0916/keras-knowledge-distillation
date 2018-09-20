@@ -4,6 +4,7 @@
 import numpy as np
 import tensorflow as tf
 import keras
+import argparse
 import h5py
 from keras import optimizers
 from keras import backend as K
@@ -28,8 +29,6 @@ from tensorflow.python.client import device_lib
 batch_size = 100
 num_classes = 10
 epochs = 300
-num_predictions = 20
-temperature = 10
 
 # The data, split between train and test sets:
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -45,13 +44,11 @@ x_test = x_test.astype('float32')
 x_train /= 255
 x_test /= 255
 
-lambda_const = 1
-
 
 def knowledge_distillation_loss(input_distillation):
     y_pred, y_true, y_soft, y_pred_soft = input_distillation
-    return (1-lambda_const) * logloss(y_true, y_pred) + \
-           lambda_const * temperature * temperature * logloss(y_soft, y_pred_soft)
+    return (1-args.lambda_const) * logloss(y_true, y_pred) + \
+           args.lambda_const * args.temperature * args.temperature * logloss(y_soft, y_pred_soft)
 
 
 class TrainingCallback(Callback):
@@ -72,10 +69,10 @@ class TrainingCallback(Callback):
 
 
 class BornAgainModel(object):
-    def __init__(self):
+    def __init__(self, teacher_model):
         self.train_model, self.born_again_model = None, None
-        self.temperature = 5.0
-        self.teacher_model = keras_load_model('teacher-model.ep140.h5')
+        self.temperature = args.temperature
+        self.teacher_model = keras_load_model(teacher_model)
         for i in range(len(self.teacher_model.layers)):
             self.teacher_model.layers[i].trainable = False
         self.teacher_model.compile(optimizer="adam", loss="categorical_crossentropy")
@@ -123,7 +120,7 @@ class BornAgainModel(object):
 
         logits = Dense(10, activation=None, name='dense2')(x)
         output_softmax = Activation('softmax', name='output_softmax')(logits)
-        logits_T = Lambda(lambda x: x/temperature, name='logits')(logits)
+        logits_T = Lambda(lambda x: x/self.temperature, name='logits')(logits)
         probabilities_T = Activation('softmax', name='probabilities')(logits_T)
 
         with tf.device('/cpu:0'):
@@ -158,28 +155,34 @@ def convert_gpu_model(org_model: Model) -> Model:
     return train_model
 
 
-model = BornAgainModel()
-model.train_model.summary()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Born Again Neural Networks for CIFAR-10')
+    parser.add_argument('--temperature', type=float, default=10.0)
+    parser.add_argument('--lambda_const', type=float, default=0.9)
+    parser.add_argument('--teacher_model_path', type=str, default=None)
 
+    args = parser.parse_args()
 
-model.train_model.compile(
-    optimizer=keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
-    loss=lambda y_true, y_pred: y_pred,
-)
+    model = BornAgainModel(args.teacher_model_path)
+    model.born_again_model.summary()
 
-training_callback = TrainingCallback(model, 'Born-Again')
+    model.train_model.compile(
+        optimizer=keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
+        loss=lambda y_true, y_pred: y_pred,
+    )
 
+    training_callback = TrainingCallback(model, 'Born-Again')
 
-model.train_model.fit(
-    [x_train, y_train], y_train,
-    batch_size=batch_size,
-    epochs=epochs,
-    validation_data=None,
-    verbose=1, shuffle=True,
-    callbacks=[
-        training_callback
-    ],
-)
+    model.train_model.fit(
+        [x_train, y_train], y_train,
+        batch_size=batch_size,
+        epochs=epochs,
+        validation_data=None,
+        verbose=1, shuffle=True,
+        callbacks=[
+            training_callback
+        ],
+    )
 
 
 
