@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 
 import numpy as np
-
+import tensorflow as tf
 import keras
 from keras import optimizers
 from keras import backend as K
@@ -21,11 +21,14 @@ from keras.callbacks import Callback
 import pytz
 from datetime import datetime
 import os
+from keras.utils import multi_gpu_model
+from tensorflow.python.client import device_lib
 
 batch_size = 100
 num_classes = 10
 epochs = 300
 num_predictions = 20
+temperature = 10
 
 # The data, split between train and test sets:
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -41,49 +44,13 @@ x_test = x_test.astype('float32')
 x_train /= 255
 x_test /= 255
 
-teacher_model = keras_load_model('teacher-model.ep140.h5')
-
-teacher_model.layers.pop()
-model = Model(teacher_model.input, teacher_model.layers[-1].output)
-
-logits_train = model.predict(x_train)
-y_train_ = np.concatenate([y_train, logits_train], axis=1)
-
-logits_test = model.predict(x_test)
-y_test_ = np.concatenate([y_test, logits_test], axis=1)
-
-print('finish preparing.')
-
-temperature = 10
+lambda_const = 0.9
 
 
-def knowledge_distillation_loss(y_true, y_pred, lambda_const):
-    y_true, logits = y_true[:, :num_classes], y_true[:, num_classes:]
-    y_soft = K.softmax(logits / temperature)
-    y_pred, y_pred_soft = y_pred[:, :num_classes], y_pred[:, num_classes:]
-
+def knowledge_distillation_loss(input_distillation):
+    y_pred, y_true, y_soft, y_pred_soft = input_distillation
     return (1-lambda_const) * logloss(y_true, y_pred) + \
            lambda_const * temperature * temperature * logloss(y_soft, y_pred_soft)
-
-
-def accuracy(y_true, y_pred):
-    y_true = y_true[:, :num_classes]
-    y_pred = y_pred[:, :num_classes]
-    return categorical_accuracy(y_true, y_pred)
-
-
-def categorical_crossentropy(y_true, y_pred):
-    y_true = y_true[:, :num_classes]
-    y_pred = y_pred[:, :num_classes]
-    return logloss(y_true, y_pred)
-
-
-# logloss with only soft probabilities and targets
-def soft_logloss(y_true, y_pred):
-    logits = y_true[:, num_classes:]
-    y_soft = K.softmax(logits/temperature)
-    y_pred_soft = y_pred[:, num_classes:]
-    return logloss(y_soft, y_pred_soft)
 
 
 class TrainingCallback(Callback):
@@ -105,12 +72,13 @@ class TrainingCallback(Callback):
 
 class BornAgainModel(object):
     def __init__(self):
-        self.train_model = None
+        self.train_model, self.born_again_model = None, None
         self.temperature = 5.0
-        self.teacher_model = keras_load_model('teachermodel.ep11.h5')
+        self.teacher_model = keras_load_model('teacher-model.ep140.h5')
         self.teacher_model.trainable = False
         self.teacher_model.compile(optimizer="adam", loss="categorical_crossentropy")
-        self.train_model = self.prepare()
+        self.train_model, self.born_again_model = self.prepare()
+        self.train_model = convert_gpu_model(self.train_model)
 
     def prepare(self):
         self.teacher_model.layers.pop()
@@ -125,20 +93,16 @@ class BornAgainModel(object):
         x = Convolution2D(64, (3, 3), padding='same', name='conv2d2')(x)
         x = BatchNormalization(name='bn2')(x)
         x = advanced_activations.LeakyReLU(alpha=0.1, name='lrelu2')(x)
-
         x = MaxPooling2D((2, 2), strides=(2, 2), name='pool1')(x)
         x = Dropout(0.3, name='drop1')(x)
-
         x = Convolution2D(128, (3, 3), padding='same', name='conv2d3')(x)
         x = BatchNormalization(name='bn3')(x)
         x = advanced_activations.LeakyReLU(alpha=0.1)(x)
         x = Convolution2D(128, (3, 3), padding='same')(x)
         x = BatchNormalization()(x)
         x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-
         x = MaxPooling2D((2, 2), strides=(2, 2))(x)
         x = Dropout(0.3)(x)
-
         x = Convolution2D(256, (3, 3), padding='same')(x)
         x = BatchNormalization()(x)
         x = advanced_activations.LeakyReLU(alpha=0.1)(x)
@@ -148,27 +112,33 @@ class BornAgainModel(object):
         x = Convolution2D(256, (3, 3), padding='same')(x)
         x = BatchNormalization()(x)
         x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-
         x = MaxPooling2D((2, 2), strides=(2, 2))(x)
         x = Dropout(0.3)(x)
-
         x = Flatten()(x)
         x = Dense(512, activation=None)(x)
         x = BatchNormalization()(x)
         x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-        logits = Dense(10, activation=None)(x)
-        probabilities = Activation('softmax')(logits)
 
+        logits = Dense(10, activation=None)(x)
+        output_softmax = Activation('softmax')(logits)
         logits_T = Lambda(lambda x: x/temperature)(logits)
         probabilities_T = Activation('softmax')(logits_T)
 
-        output = concatenate([probabilities, probabilities_T])
+        with tf.device('\cpu:0'):
+            born_again_model = Model(inputs=input_layer, outputs=output_softmax)
+            input_true = Input(name='input_true', shape=[None], dtype='float32')
+        output_loss = Lambda(knowledge_distillation_loss, output_shape=(1,), name='kd_')(
+            [output_softmax, input_true, teacher_probabilities_T, probabilities_T]
+        )
+        inputs = [input_layer, input_true]
 
-        model = Model(input_layer, output)
-        return model
+        with tf.device('\cpu:0'):
+            train_model = Model(inputs=inputs, outputs=output_loss)
+
+        return train_model, born_again_model
 
     def evaluate(self):
-        y_pred = self.train_model.predict(x_test)
+        y_pred = self.born_again_model.predict(x_test)
         acc = 0
         for i in range(y_pred.shape[0]):
             if np.argmax(y_pred[i][:10]) == np.argmax(y_test[i]):
@@ -177,25 +147,32 @@ class BornAgainModel(object):
         return acc / y_pred.shape[0]
 
 
-model = StudentModel()
-model.train_model.summary()
+def convert_gpu_model(org_model: Model) -> Model:
+    gpu_count = len(device_lib.list_local_devices()) - 1
+    if gpu_count > 1:
+        train_model = multi_gpu_model(org_model, gpu_count)
+    else:
+        train_model = org_model
+    return train_model
 
-lambda_const = 0.9
+
+model = BornAgainModel()
+model.born_again_model.summary()
+
 
 model.train_model.compile(
     optimizer=keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
-    loss=lambda y_true, y_pred: knowledge_distillation_loss(y_true, y_pred, lambda_const),
-    metrics=[accuracy, categorical_crossentropy, soft_logloss]
+    loss=lambda y_true, y_pred: y_pred,
 )
 
 training_callback = TrainingCallback(model, 'Born-Again')
 
 
 model.train_model.fit(
-    x_train, y_train_,
+    [x_train, y_train],
     batch_size=batch_size,
     epochs=epochs,
-    validation_data=(x_test, y_test_),
+    validation_data=None,
     verbose=1, shuffle=True,
     callbacks=[
         training_callback
