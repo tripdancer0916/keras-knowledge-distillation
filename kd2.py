@@ -169,7 +169,7 @@ training_callback = TrainingCallback(model, 'Born-Again')
 
 
 model.train_model.fit(
-    [x_train, y_train],
+    [x_train, y_train], y_train,
     batch_size=batch_size,
     epochs=epochs,
     validation_data=None,
