@@ -124,7 +124,7 @@ class BornAgainModel(object):
         logits_T = Lambda(lambda x: x/temperature)(logits)
         probabilities_T = Activation('softmax')(logits_T)
 
-        with tf.device('\cpu:0'):
+        with tf.device('/cpu:0'):
             born_again_model = Model(inputs=input_layer, outputs=output_softmax)
             input_true = Input(name='input_true', shape=[None], dtype='float32')
         output_loss = Lambda(knowledge_distillation_loss, output_shape=(1,), name='kd_')(
@@ -132,7 +132,7 @@ class BornAgainModel(object):
         )
         inputs = [input_layer, input_true]
 
-        with tf.device('\cpu:0'):
+        with tf.device('/cpu:0'):
             train_model = Model(inputs=inputs, outputs=output_loss)
 
         return train_model, born_again_model
