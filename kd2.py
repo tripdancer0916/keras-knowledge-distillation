@@ -45,7 +45,7 @@ x_test = x_test.astype('float32')
 x_train /= 255
 x_test /= 255
 
-lambda_const = 0
+lambda_const = 1
 
 
 def knowledge_distillation_loss(input_distillation):
