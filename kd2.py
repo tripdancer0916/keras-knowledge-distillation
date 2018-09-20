@@ -4,6 +4,7 @@
 import numpy as np
 import tensorflow as tf
 import keras
+import h5py
 from keras import optimizers
 from keras import backend as K
 from keras.losses import categorical_crossentropy as logloss
@@ -67,7 +68,7 @@ class TrainingCallback(Callback):
             time_stamp, self.model_prefix, epoch + 1, acc, logs['loss'])
         save_model_path = os.path.join('./models', model_name)
 
-        model.train_model.save(save_model_path)
+        model.born_again_model.save(save_model_path)
 
 
 class BornAgainModel(object):
