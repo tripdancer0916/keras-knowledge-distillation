@@ -76,7 +76,7 @@ class BornAgainModel(object):
         self.train_model, self.born_again_model = None, None
         self.temperature = 5.0
         self.teacher_model = keras_load_model('teacher-model.ep140.h5')
-        self.teacher_model.trainable = False
+        self.teacher_model.layers.trainable = False
         self.teacher_model.compile(optimizer="adam", loss="categorical_crossentropy")
         self.train_model, self.born_again_model = self.prepare()
         self.train_model = convert_gpu_model(self.train_model)
