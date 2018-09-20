@@ -158,7 +158,7 @@ def convert_gpu_model(org_model: Model) -> Model:
 
 
 model = BornAgainModel()
-model.born_again_model.summary()
+model.train_model.summary()
 
 
 model.train_model.compile(
