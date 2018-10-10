@@ -20,6 +20,7 @@ batch_size = 32
 num_classes = 10
 epochs = 100
 
+os.makedirs('./models/', exist_ok=True)
 
 # The data, split between train and test sets:
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
