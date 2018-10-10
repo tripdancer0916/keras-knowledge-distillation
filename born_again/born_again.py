@@ -26,9 +26,9 @@ import os
 from keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 
-batch_size = 100
+batch_size = 32
 num_classes = 10
-epochs = 300
+epochs = 100
 
 # The data, split between train and test sets:
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
