@@ -6,6 +6,7 @@ import keras
 from keras import regularizers
 from keras import backend as K
 from keras.datasets import cifar10
+from keras.utils import plot_model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.engine.topology import Input, Container
 from keras.engine.training import Model
@@ -18,7 +19,7 @@ import os
 batch_size = 100
 num_classes = 10
 epochs = 300
-num_predictions = 20
+
 
 # The data, split between train and test sets:
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -29,7 +30,11 @@ print(x_test.shape[0], 'test samples')
 y_train = keras.utils.to_categorical(y_train, num_classes)
 y_test = keras.utils.to_categorical(y_test, num_classes)
 
-weight_decay = 0.0005
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train /= 255
+x_test /= 255
+
 
 input_layer = Input(x_train.shape[1:])
 x = Convolution2D(64, (3, 3), padding='same')(input_layer)
@@ -77,14 +82,11 @@ opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 
 model = Model(input_layer, output)
 model.summary()
+plot_model(model, show_shapes=True)
 model.compile(loss='categorical_crossentropy',
               optimizer=opt,
               metrics=['accuracy'])
 
-x_train = x_train.astype('float32')
-x_test = x_test.astype('float32')
-x_train /= 255
-x_test /= 255
 
 print('Using real-time data augmentation.')
 
@@ -117,7 +119,7 @@ datagen = ImageDataGenerator(
 
 datagen.fit(x_train)
 
-callbacks = [ModelCheckpoint(filepath="./models/teacher-model.ep{epoch:02d}.h5")]
+callbacks = [ModelCheckpoint(filepath="./models/weights.{epoch:02d}-{val_loss:.2f}.hdf5")]
 model.fit_generator(datagen.flow(x_train, y_train,
                                  batch_size=batch_size),
                     epochs=epochs,
