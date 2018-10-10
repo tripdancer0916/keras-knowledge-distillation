@@ -16,9 +16,9 @@ from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling
 from keras.callbacks import ModelCheckpoint
 import os
 
-batch_size = 100
+batch_size = 32
 num_classes = 10
-epochs = 300
+epochs = 100
 
 
 # The data, split between train and test sets:
