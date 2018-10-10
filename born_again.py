@@ -47,7 +47,7 @@ x_test /= 255
 
 def knowledge_distillation_loss(input_distillation):
     y_pred, y_true, y_soft, y_pred_soft = input_distillation
-    return (1-args.lambda_const) * logloss(y_true, y_pred) + \
+    return (1 - args.lambda_const) * logloss(y_true, y_pred) + \
            args.lambda_const * args.temperature * args.temperature * logloss(y_soft, y_pred_soft)
 
 
@@ -120,7 +120,7 @@ class BornAgainModel(object):
 
         logits = Dense(10, activation=None, name='dense2')(x)
         output_softmax = Activation('softmax', name='output_softmax')(logits)
-        logits_T = Lambda(lambda x: x/self.temperature, name='logits')(logits)
+        logits_T = Lambda(lambda x: x / self.temperature, name='logits')(logits)
         probabilities_T = Activation('softmax', name='probabilities')(logits_T)
 
         with tf.device('/cpu:0'):
@@ -171,18 +171,41 @@ if __name__ == '__main__':
         loss=lambda y_true, y_pred: y_pred,
     )
 
+    datagen = ImageDataGenerator(
+        featurewise_center=False,  # set input mean to 0 over the dataset
+        samplewise_center=False,  # set each sample mean to 0
+        featurewise_std_normalization=False,  # divide inputs by std of the dataset
+        samplewise_std_normalization=False,  # divide each input by its std
+        zca_whitening=False,  # apply ZCA whitening
+        zca_epsilon=1e-06,  # epsilon for ZCA whitening
+        rotation_range=20,  # randomly rotate images in the range (degrees, 0 to 180)
+        # randomly shift images horizontally (fraction of total width)
+        width_shift_range=0.1,
+        # randomly shift images vertically (fraction of total height)
+        height_shift_range=0.1,
+        shear_range=0.1,  # set range for random shear
+        zoom_range=0.2,  # set range for random zoom
+        channel_shift_range=0.,  # set range for random channel shifts
+        # set mode for filling points outside the input boundaries
+        fill_mode='nearest',
+        cval=0.,  # value used for fill_mode = "constant"
+        horizontal_flip=True,  # randomly flip images
+        vertical_flip=False,  # randomly flip images
+        # set rescaling factor (applied before any other transformation)
+        rescale=None,
+        # set function that will be applied on each input
+        preprocessing_function=None,
+        # image data format, either "channels_first" or "channels_last"
+        data_format=None,
+        # fraction of images reserved for validation (strictly between 0 and 1)
+        validation_split=0.0)
+
+    datagen.fit(x_train)
+
     training_callback = TrainingCallback(model, 'Born-Again')
 
-    model.train_model.fit(
-        [x_train, y_train], y_train,
-        batch_size=batch_size,
-        epochs=epochs,
-        validation_data=None,
-        verbose=1, shuffle=True,
-        callbacks=[
-            training_callback
-        ],
-    )
-
-
-
+    model.train_model.fit_generator(datagen.flow(x_train, y_train,
+                                                 batch_size=batch_size),
+                                    epochs=epochs,
+                                    validation_data=(x_test, y_test),
+                                    workers=4, callbacks=[training_callback])
