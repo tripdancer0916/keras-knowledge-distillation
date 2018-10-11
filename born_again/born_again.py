@@ -63,6 +63,7 @@ class MyIterator(object):
         tmp = next(self.iterator)
         return [tmp[0], tmp[1]], tmp[1]
 
+
 class TrainingCallback(Callback):
     def __init__(self, model, model_prefix):
         super(TrainingCallback, self).__init__()
@@ -217,6 +218,6 @@ if __name__ == '__main__':
     tmp_iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
     iterator = MyIterator(tmp_iterator)
     model.train_model.fit_generator(iterator,
-                                    steps_per_epoch=x_train.shape[0]//batch_size,
+                                    steps_per_epoch=x_train.shape[0] // batch_size,
                                     epochs=epochs,
                                     workers=4, callbacks=[training_callback])
