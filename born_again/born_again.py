@@ -218,6 +218,7 @@ if __name__ == '__main__':
     tmp_iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
     iterator = MyIterator(tmp_iterator)
     model.train_model.fit_generator(iterator,
+                                    steps_per_epoch=x_train.shape[0]//batch_size,
                                     epochs=epochs,
                                     validation_data=(x_test, y_test),
                                     workers=4, callbacks=[training_callback])
