@@ -52,6 +52,17 @@ def knowledge_distillation_loss(input_distillation):
            args.lambda_const * args.temperature * args.temperature * logloss(y_soft, y_pred_soft)
 
 
+class MyIterator(object):
+    def __init__(self, iterator_org):
+        self.iterator = iterator_org
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        tmp = next(self.iterator)
+        return [tmp[0], tmp[1]], tmp[1]
+
 class TrainingCallback(Callback):
     def __init__(self, model, model_prefix):
         super(TrainingCallback, self).__init__()
@@ -154,18 +165,6 @@ def convert_gpu_model(org_model: Model) -> Model:
     else:
         train_model = org_model
     return train_model
-
-
-class MyIterator(object):
-    def __init__(self, iterator):
-        self.iterator = iterator
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        tmp = next(self.iterator)
-        return [tmp[0], tmp[1]], tmp[1]
 
 
 if __name__ == '__main__':
