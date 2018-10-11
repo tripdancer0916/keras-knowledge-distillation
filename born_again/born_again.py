@@ -220,5 +220,4 @@ if __name__ == '__main__':
     model.train_model.fit_generator(iterator,
                                     steps_per_epoch=x_train.shape[0]//batch_size,
                                     epochs=epochs,
-                                    validation_data=(x_test, y_test),
                                     workers=4, callbacks=[training_callback])
