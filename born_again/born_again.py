@@ -164,7 +164,7 @@ class MyIterator(object):
 
     def __next__(self):
         tmp = next(self.iterator)
-        return [tmp[0], tmp[1]], tmp[1]
+        return tmp, tmp[1]
 
 
 if __name__ == '__main__':
