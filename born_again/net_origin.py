@@ -120,7 +120,7 @@ datagen = ImageDataGenerator(
 
 datagen.fit(x_train)
 
-callbacks = [ModelCheckpoint(filepath="./models/weights.epoch_{epoch:02d}-val_acc_{val_acc:.2f}.hdf5")]
+callbacks = [ModelCheckpoint(filepath="./models/weights.epoch_{epoch:02d}-val_acc_{val_acc}.hdf5")]
 model.fit_generator(datagen.flow(x_train, y_train,
                                  batch_size=batch_size),
                     epochs=epochs,
