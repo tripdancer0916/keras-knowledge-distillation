@@ -12,6 +12,7 @@ from keras.losses import categorical_crossentropy as logloss
 from keras.metrics import categorical_accuracy, top_k_categorical_accuracy
 from keras.datasets import cifar10
 from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing.image import Iterator
 from keras.engine.topology import Input, Container
 from keras.engine.training import Model
 from keras.models import Sequential
@@ -155,7 +156,7 @@ def convert_gpu_model(org_model: Model) -> Model:
     return train_model
 
 
-class MyIterator(object):
+class MyIterator(Iterator):
     def __init__(self, iterator):
         self.iterator = iterator
 
