@@ -14,4 +14,3 @@ temperatureはsoft targetを計算する際の温度項、lambda_constはhard lo
 
 ### 補足  
 ここでは```original_network.py```と```born_again.py```のネットワークが同一のためBorn-Againとなっていますが、このネットワークを変更すれば通常のKnowledge Distillationを行うことも出来ます。
-```
