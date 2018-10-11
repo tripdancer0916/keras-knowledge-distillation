@@ -27,7 +27,7 @@ import os
 from keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 
-batch_size = 2
+batch_size = 32
 num_classes = 10
 epochs = 100
 
@@ -156,6 +156,18 @@ def convert_gpu_model(org_model: Model) -> Model:
     return train_model
 
 
+class MyIterator(object):
+    def __init__(self, iterator):
+        self.iterator = iterator
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        tmp = next(self.iterator)
+        return tmp, tmp[1]
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Born Again Neural Networks for CIFAR-10')
     parser.add_argument('--temperature', type=float, default=10.0)
@@ -199,14 +211,13 @@ if __name__ == '__main__':
         # image data format, either "channels_first" or "channels_last"
         data_format=None)
 
+    datagen.fit(x_train)
+
     training_callback = TrainingCallback(model, 'Born-Again')
 
-    iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
-    for i in range(epochs):
-        tmp = next(iterator)
-        x = np.array(tmp[0], tmp[1])
-        y = tmp[1]
-
-        loss, acc = model.train_model.train_on_batch(x, y)
-        print(acc)
-
+    tmp_iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
+    iterator = MyIterator(tmp_iterator)
+    model.train_model.fit_generator(iterator,
+                                    epochs=epochs,
+                                    validation_data=(x_test, y_test),
+                                    workers=4, callbacks=[training_callback])
