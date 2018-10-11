@@ -26,7 +26,7 @@ import os
 from keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 
-batch_size = 2
+batch_size = 32
 num_classes = 10
 epochs = 100
 
@@ -214,18 +214,10 @@ if __name__ == '__main__':
 
     training_callback = TrainingCallback(model, 'Born-Again')
 
-    iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
-
-    print(next(iterator))
-
-    tmp_iterator = MyIterator(iterator)
-
-    print(next(tmp_iterator))
-
-    """
-    model.train_model.fit_generator(datagen.flow(x_train, y_train,
-                                                 batch_size=batch_size),
+    tmp_iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
+    iterator = MyIterator(tmp_iterator)
+    model.train_model.fit_generator(iterator,
                                     epochs=epochs,
                                     validation_data=(x_test, y_test),
                                     workers=4, callbacks=[training_callback])
-    """
+
