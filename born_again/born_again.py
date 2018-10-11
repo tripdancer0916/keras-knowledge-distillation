@@ -27,7 +27,7 @@ import os
 from keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 
-batch_size = 32
+batch_size = 2
 num_classes = 10
 epochs = 100
 
@@ -204,8 +204,9 @@ if __name__ == '__main__':
     iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
     for i in range(epochs):
         tmp = next(iterator)
-        x = [tmp[0], tmp[1]]
+        x = np.array(tmp[0], tmp[1])
         y = tmp[1]
+
         loss, acc = model.train_model.train_on_batch(x, y)
         print(acc)
 
