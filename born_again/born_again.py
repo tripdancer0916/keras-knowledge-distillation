@@ -203,8 +203,9 @@ if __name__ == '__main__':
 
     iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
     for i in range(epochs):
-        x = next(iterator)
-        y = x[1]
+        tmp = next(iterator)
+        x = [tmp[0], tmp[1]]
+        y = tmp[1]
         loss, acc = model.train_model.train_on_batch(x, y)
         print(acc)
 
