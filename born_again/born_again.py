@@ -202,8 +202,15 @@ if __name__ == '__main__':
 
     training_callback = TrainingCallback(model, 'Born-Again')
 
-    model.train_model.fit_generator(datagen.flow([x_train, y_train], y_train,
+    iterator = datagen.flow(x_train, y_train, batch_size=batch_size)
+
+    for i in iterator:
+        print(i)
+
+    """
+    model.train_model.fit_generator(datagen.flow(x_train, y_train,
                                                  batch_size=batch_size),
                                     epochs=epochs,
                                     validation_data=(x_test, y_test),
                                     workers=4, callbacks=[training_callback])
+    """
