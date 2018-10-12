@@ -76,7 +76,7 @@ x = Dense(512, activation=None)(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 
-logits = Dense(10, activation=None)(x)
+logits = Dense(num_classes, activation=None)(x)
 output = Activation('softmax')(logits)
 
 opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)

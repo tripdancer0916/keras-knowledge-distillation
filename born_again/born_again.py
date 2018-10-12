@@ -10,7 +10,7 @@ from keras import optimizers
 from keras import backend as K
 from keras.losses import categorical_crossentropy as logloss
 from keras.metrics import categorical_accuracy, top_k_categorical_accuracy
-from keras.datasets import cifar10
+from keras.datasets import cifar10, cifar100
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing.image import Iterator
 from keras.engine.topology import Input, Container
@@ -131,7 +131,7 @@ class BornAgainModel(object):
         x = BatchNormalization(name='bn8')(x)
         x = advanced_activations.LeakyReLU(alpha=0.1, name='lrelu8')(x)
 
-        logits = Dense(10, activation=None, name='dense2')(x)
+        logits = Dense(num_classes, activation=None, name='dense2')(x)
         output_softmax = Activation('softmax', name='output_softmax')(logits)
         logits_T = Lambda(lambda x: x / self.temperature, name='logits')(logits)
         probabilities_T = Activation('softmax', name='probabilities')(logits_T)
@@ -153,7 +153,7 @@ class BornAgainModel(object):
         y_pred = self.born_again_model.predict(x_test)
         acc = 0
         for i in range(y_pred.shape[0]):
-            if np.argmax(y_pred[i][:10]) == np.argmax(y_test[i]):
+            if np.argmax(y_pred[i][:num_classes]) == np.argmax(y_test[i]):
                 acc = acc + 1
 
         return acc / y_pred.shape[0]
@@ -169,7 +169,7 @@ def convert_gpu_model(org_model: Model) -> Model:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Born Again Neural Networks for CIFAR-10')
+    parser = argparse.ArgumentParser(description='Born Again Neural Networks for CIFAR-100')
     parser.add_argument('--temperature', type=float, default=10.0)
     parser.add_argument('--lambda_const', type=float, default=0.9)
     parser.add_argument('--teacher_model_path', type=str, default=None)
