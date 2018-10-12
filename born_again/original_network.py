@@ -5,7 +5,7 @@ from __future__ import print_function
 import keras
 from keras import regularizers
 from keras import backend as K
-from keras.datasets import cifar10
+from keras.datasets import cifar10, cifar100
 from keras.utils import plot_model
 from keras.preprocessing.image import ImageDataGenerator
 from keras.engine.topology import Input, Container
@@ -16,14 +16,14 @@ from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling
 from keras.callbacks import ModelCheckpoint
 import os
 
-batch_size = 32
-num_classes = 10
-epochs = 100
+batch_size = 128
+num_classes = 100
+epochs = 300
 
-os.makedirs('./models/', exist_ok=True)
+os.makedirs('./teacher_models/', exist_ok=True)
 
 # The data, split between train and test sets:
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+(x_train, y_train), (x_test, y_test) = cifar100.load_data()
 print('x_train shape:', x_train.shape)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
@@ -120,7 +120,7 @@ datagen = ImageDataGenerator(
 
 datagen.fit(x_train)
 
-callbacks = [ModelCheckpoint(filepath="./models/weights.epoch_{epoch:02d}-val_acc_{val_acc}.hdf5")]
+callbacks = [ModelCheckpoint(filepath="./models/teacher_model_epoch_{epoch:02d}-val_acc_{val_acc}.hdf5")]
 model.fit_generator(datagen.flow(x_train, y_train,
                                  batch_size=batch_size),
                     epochs=epochs,

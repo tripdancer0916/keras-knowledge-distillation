@@ -27,12 +27,12 @@ import os
 from keras.utils import multi_gpu_model
 from tensorflow.python.client import device_lib
 
-batch_size = 32
-num_classes = 10
-epochs = 100
+batch_size = 128
+num_classes = 100
+epochs = 300
 
 # The data, split between train and test sets:
-(x_train, y_train), (x_test, y_test) = cifar10.load_data()
+(x_train, y_train), (x_test, y_test) = cifar100.load_data()
 print('x_train shape:', x_train.shape)
 print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
@@ -76,7 +76,7 @@ class TrainingCallback(Callback):
         time_stamp = datetime.strftime(datetime.now(pytz.timezone('Japan')), '%m%d%H%M')
         model_name = '{}_{}_epoch_{:03d}_ACC_{:.4f}_loss_{:.4f}.aiinside'.format(
             time_stamp, self.model_prefix, epoch + 1, acc, logs['loss'])
-        save_model_path = os.path.join('./models', model_name)
+        save_model_path = os.path.join('./born_again_models', model_name)
 
         model.born_again_model.save(save_model_path)
 
