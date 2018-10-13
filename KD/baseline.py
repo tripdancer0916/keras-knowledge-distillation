@@ -20,7 +20,7 @@ batch_size = 128
 num_classes = 10
 epochs = 300
 
-os.makedirs('./teacher_models/', exist_ok=True)
+os.makedirs('./baseline/', exist_ok=True)
 
 # The data, split between train and test sets:
 (x_train, y_train), (x_test, y_test) = cifar10.load_data()
@@ -38,9 +38,13 @@ x_test /= 255
 
 
 input_layer = Input(x_train.shape[1:])
-x = Convolution2D(64, (3, 3), padding='same')(input_layer)
+x = Convolution2D(32, (3, 3), padding='same')(input_layer)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
+
+x = MaxPooling2D((2, 2), strides=(2, 2))(x)
+x = Dropout(0.3)(x)
+
 x = Convolution2D(64, (3, 3), padding='same')(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
@@ -58,21 +62,8 @@ x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 x = MaxPooling2D((2, 2), strides=(2, 2))(x)
 x = Dropout(0.3)(x)
 
-x = Convolution2D(256, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(256, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-x = Convolution2D(256, (3, 3), padding='same')(x)
-x = BatchNormalization()(x)
-x = advanced_activations.LeakyReLU(alpha=0.1)(x)
-
-x = MaxPooling2D((2, 2), strides=(2, 2))(x)
-x = Dropout(0.3)(x)
-
 x = Flatten()(x)
-x = Dense(512, activation=None)(x)
+x = Dense(256, activation=None)(x)
 x = BatchNormalization()(x)
 x = advanced_activations.LeakyReLU(alpha=0.1)(x)
 
@@ -83,7 +74,7 @@ opt = keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08)
 
 model = Model(input_layer, output)
 model.summary()
-plot_model(model, show_shapes=True, to_file='teacher_model.png')
+plot_model(model, show_shapes=True, to_file='student_model.png')
 model.compile(loss='categorical_crossentropy',
               optimizer=opt,
               metrics=['accuracy'])
@@ -120,7 +111,7 @@ datagen = ImageDataGenerator(
 
 datagen.fit(x_train)
 
-callbacks = [ModelCheckpoint(filepath="./teacher_models/teacher_model_epoch_{epoch:02d}-val_acc_{val_acc}.hdf5")]
+callbacks = [ModelCheckpoint(filepath="./baseline/student_model_epoch_{epoch:02d}-val_acc_{val_acc}.hdf5")]
 model.fit_generator(datagen.flow(x_train, y_train,
                                  batch_size=batch_size),
                     epochs=epochs,
