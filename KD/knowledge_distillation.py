@@ -178,7 +178,7 @@ if __name__ == '__main__':
 
     model = BornAgainModel(args.teacher_model_path)
     model.born_again_model.summary()
-    plot_model(model.train_model, to_file='knowledge_distillation.png')
+    # plot_model(model.train_model, to_file='knowledge_distillation.png')
 
     model.train_model.compile(
         optimizer=keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
