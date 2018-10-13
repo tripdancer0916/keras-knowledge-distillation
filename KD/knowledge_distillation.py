@@ -16,6 +16,7 @@ from keras.preprocessing.image import Iterator
 from keras.engine.topology import Input, Container
 from keras.engine.training import Model
 from keras.models import Sequential
+from keras.utils import plot_model
 from keras.layers import Dense, Dropout, Activation, Flatten, advanced_activations, BatchNormalization
 from keras.layers import Conv2D, MaxPooling2D, Convolution2D, pooling, Lambda, concatenate
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
@@ -177,6 +178,7 @@ if __name__ == '__main__':
 
     model = BornAgainModel(args.teacher_model_path)
     model.born_again_model.summary()
+    plot_model(model.train_model, to_file='knowledge_distillation')
 
     model.train_model.compile(
         optimizer=keras.optimizers.Adam(lr=0.003, beta_1=0.9, beta_2=0.999, epsilon=1e-08),
